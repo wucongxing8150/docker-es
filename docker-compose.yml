@@ -1,0 +1,73 @@
+version: '2.2'
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    container_name: local-es-01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./es/elastic-certificates.p12:/usr/share/elasticsearch/config/elastic-certificates.p12
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  es02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    container_name: local-es-02
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./es/elastic-certificates.p12:/usr/share/elasticsearch/config/elastic-certificates.p12
+    networks:
+      - elastic
+
+  kibana:
+    depends_on: 
+      - es01
+    image: docker.elastic.co/kibana/kibana:7.6.2
+    container_name: local-kibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      - elastic
+  es-head:
+    image: mobz/elasticsearch-head:5
+    container_name: local-es-head
+    ports:
+      - 9100:9100
+    networks:
+      - elastic
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+networks:
+  elastic:
+    driver: bridge
