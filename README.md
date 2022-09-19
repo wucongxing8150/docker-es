@@ -1,12 +1,21 @@
-安装
-Github
+## 安装
+
+### Github
+
 git@github.com:wucongxing8150/docker-es.git
-es
+
+### es
+
+```Shell
 # 设置max_map_count的值
 cat /proc/sys/vm/max_map_count sysctl -w vm.max_map_count=262144
 
 docker run -d --name local-es -p 9200:9200 -p 9300:9300 -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.2
-es-head
+```
+
+### es-head
+
+```Shell
 docker pull mobz/elasticsearch-head:5
 docker run --name local-es-head -p 9100:9100 mobz/elasticsearch-head:5
 
@@ -22,11 +31,19 @@ contentType: "application/json;charset=UTF-8",
 var inspectData = s.contentType === "application/json;charset=UTF-8" &&        
 
 docker cp vendor.js  local-es-head:/usr/src/app/_site
-kibana
+```
+
+### kibana
+
+```Shell
 docker pull docker.elastic.co/kibana/kibana:7.6.2
 
 docker run  --name kibana --link local-es-01 -p 5601:5601 docker.elastic.co/kibana/kibana:7.6.2
-docker-compose
+```
+
+### docker-compose
+
+```YAML
 version: '2.2'
 services:
   es01:
@@ -100,16 +117,24 @@ volumes:
 networks:
   elastic:
     driver: bridge
+```
 
-注意事项
+## 注意事项
+
 - 安装es-head，需调整es跨域问题
+
+```Shell
 # 进入es容器内部
 cd /usr/share/elasticsearch/config
 # 或
 cd /config
 http.cors.enabled: true
 http.cors.allow-origin: "*"
+```
+
 - es秘钥问题
+
+```Shell
 docker exec -it es01 /bin/bash
 
 [root@bedf706ff508 elasticsearch]# ./bin/elasticsearch-setup-passwords -h
@@ -154,9 +179,18 @@ Changed password for user elastic
 PASSWORD elastic = jox3OT92zSJ1WLL9rW1q
 
 # 重启
+```
+
 - es-head访问问题
+
+```Shell
 http://127.0.0.1:9100/?auth_user=elastic&auth_password=jox3OT92zSJ1WLL9rW1q
+```
+
 - Kibana访问问题
+
+```Shell
 # 修改kibana.yml
 elasticsearch.username: elastic
 elasticsearch.password: jox3OT92zSJ1WLL9rW1q
+```
